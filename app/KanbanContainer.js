@@ -17,6 +17,41 @@ class KanbanContainer extends Component {
             cards: []
         };
     }
+
+    updateCardStatus(cardId, listId) {
+        let cardIndex = this.state.cards.findIndex((card) => card.id == cardId);
+        let card = this.state.cards[cardIndex];
+        if(card.status !== listId) {
+            this.setState(
+                update(this.state, {
+                    cards: {
+                        [cardIndex]: {
+                            status: {$set: listId}
+                        }
+                    }
+                })
+            );
+        }
+    }
+
+    updateCardPosition(cardId, afterId) {
+        if(cardId !== afterId) {
+            let cardIndex = this.state.cards.findIndex((card) => card.id == cardId);
+            let card = this.state.cards[cardIndex];
+            let afterIndex = this.state.cards.findIndex((card) => card.id == afterId);
+
+            this.setState(
+                update(this.state, {
+                    cards: {
+                        $splice: [
+                            [cardIndex, 1],
+                            [afterIndex, 0, card]
+                        ]
+                    }
+                })
+            );
+        }
+    }
     
     addTask(cardId, taskName) {
         let prevState = this.state;
@@ -26,7 +61,7 @@ class KanbanContainer extends Component {
         let nextState = update(this.state.cards, {[cardIndex]: {tasks: {$push: [newTask]}}});
         this.setState({cards: nextState});
         
-        fetch('${API_URL}/cards/${cardId}/tasks', {
+        fetch(`${API_URL}/cards/${cardId}/tasks`, {
             method: 'post',
             body: JSON.stringify(newTask)
         }).then((response) => {
@@ -48,7 +83,7 @@ class KanbanContainer extends Component {
         let nextState = update(this.state.cards, {[cardIndex]: {tasks: {$splice: [[taskIndex, 1]]}}});
         this.setState({cards: nextState});
         
-        fetch('${API_URL}/cards/${cardId}/tasks', {
+        fetch(`${API_URL}/cards/${cardId}/tasks`, {
             method: 'delete'
         });
     }
@@ -69,7 +104,7 @@ class KanbanContainer extends Component {
         });
         this.setState({cards: nextState});
         
-        fetch('${API_URL}/cards/${cardId}/tasks/${taskId}', {
+        fetch(`${API_URL}/cards/${cardId}/tasks/${taskId}`, {
             method: 'put',
             body: JSON.stringify()
         });
@@ -80,14 +115,14 @@ class KanbanContainer extends Component {
             add: this.addTask.bind(this), 
             delete: this.deleteTask.bind(this), 
             toggle: this.toggleTask.bind(this)
-        }} />
+        }} cardCallbacks={{updateStatus: this.updateCardStatus.bind(this), updatePosition: this.updateCardPosition.bind(this)}} />
     }
     
     componentDidMount() {
-        fetch(API_URL + '/cards')
+        fetch(`${API_URL}/cards`)
             .then((response) => response.json())
             .then((responseData) => this.setState({cards: responseData}))
-            .catch((error) => console.log('Error fetching and parsing data.'));
+            .catch((error) => console.log('Error fetching and parsing data. => ' + error));
     }
 };
 

@@ -2,6 +2,34 @@ import React, { Component, PropTypes } from 'react';
 import CheckList from './CheckList';
 import marked from 'marked';
 import ReactCSSTransitionGroup from 'react-addons-css-transition-group';
+import { DragSource, DropTarget } from 'react-dnd';
+
+const cardDragSpec = {
+	beginDrag(props) {
+		return {
+			id: props.id
+		};
+	}
+}
+
+let collectDrag = (connect, monitor) => {
+	return {
+		connectDragSource: connect.dragSource()
+	}
+}
+
+const cardDropSpec = {
+	hover(props, monitor) {
+		const draggedId = monitor.getItem().id;
+		props.cardCallbacks.updatePosition(draggedId, props.id);
+	}
+}
+
+let collectDrop = (connect, monitor) => {
+	return {
+		connectDropTarget: connect.dropTarget()
+	};
+}
 
 class Card extends Component {
 	constructor() {
@@ -16,6 +44,8 @@ class Card extends Component {
 	}
 
 	render() {
+		const { connectDragSource, connectDropTarget } = this.props;
+
 		let cardDetails;
 		if (this.state.showDetails) {
 			cardDetails = (
@@ -36,7 +66,7 @@ class Card extends Component {
 			backgroundColor: this.props.color
 		};
 
-		return (
+		return connectDropTarget(connectDragSource(
 			<div className="card">
 				<div style={sideColor} />
 				<div className={this.state.showDetails ? "card__title card__title--is-open" : "card__title"} onClick={this.toggleDetails.bind(this)}>{this.props.title}</div>
@@ -45,7 +75,7 @@ class Card extends Component {
 					{cardDetails}
 				</ReactCSSTransitionGroup>
 			</div>
-	    );
+	    ));
 	}
 }
 
@@ -66,4 +96,7 @@ Card.propTypes = {
 	tasks: PropTypes.arrayOf(PropTypes.object)
 };
 
-export default Card;
+const dragHighOrderComponent = DragSource("cards", cardDragSpec, collectDrag)(Card);
+const dragDropHighOrderComponent = DropTarget("cards", cardDropSpec, collectDrop)(dragHighOrderComponent);
+
+export default dragDropHighOrderComponent;
