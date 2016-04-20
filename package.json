@@ -2,7 +2,8 @@
   "name": "KanbanApp",
   "version": "0.1.4",
   "description": "React Kanban Application",
-  "author": "Cássio Zen",
+  "author": "Nikola Petrovic",
+  "repository": "https://github.com/nikpetrovic/KanbanApp.git",
   "license": "ISC",
   "scripts": {
     "start": "webpack-dev-server --progress",
